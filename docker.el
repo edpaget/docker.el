@@ -25,12 +25,51 @@
 ;; along with GNU Emacs; see the file COPYING. If not, write to the
 ;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 ;; Boston, MA 02110-1301, USA.
-;;; Commentary:
-;; M-x rvm-use-default prepares the current Emacs session to use
-;; the default ruby configured with rvm.
-;; M-x rvm-use allows you to switch the current session to the ruby
-;; implementation of your choice. You can also change the active gemset.
+
 ;;; Compiler support:
+
+(eval-when-compile
+  (require 'cl))
+
+(require 'request)
+
+(require 'require-deferred)
+
+(defcustom docker-daemon-location
+  "http://localhost:8181"
+  "Protocol and location of the docker daemon"
+  :group 'docker
+  :type 'string)
+
+(defun docker/request (type location &rest params)
+  (deferred:$
+    (request-deferred
+     (docker/request-url location params)
+     :parser 'buffer-string
+     :type type)))
+
+(defun docker/request-url (location params)
+  )
+
+(defun docker--then (promise success failure)
+  "Sets Success or Failure on a promise and returns a new promise"
+  promise)
+
+(defn docker/request)
+
+(defun docker--list-containers ()
+  "Fetch a list of running docker containers"
+  (request
+   (concat docker-daemon-location "/containers/json")
+   :type "GET"
+   :parser 'buffer-string
+   :sync t
+   :error (function*
+           (lambda (&rest _)
+             (message "errored")))
+   :success (function*
+             (lambda (&key data &allow-other-keys)
+               (message "Found %S containers" (length data))))))
 
 (provide 'docker)
 ;;; docker.el ends here
